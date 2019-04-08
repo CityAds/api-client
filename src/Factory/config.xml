@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<container xmlns="http://symfony.com/schema/dic/services"
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xsi:schemaLocation="http://symfony.com/schema/dic/services http://symfony.com/schema/dic/services/services-1.0.xsd">
+
+    <parameters>
+        <parameter key="http_client.config.auth" type="collection">
+            <parameter key="cookies">true</parameter>
+            <parameter key="headers" type="collection">
+                <parameter key="Content-Type">application/json</parameter>
+            </parameter>
+            <parameter key="base_uri">https://auth2.cityads.com</parameter>
+        </parameter>
+
+        <parameter key="http_client.config.api" type="collection">
+            <parameter key="cookies">true</parameter>
+            <parameter key="headers" type="collection">
+                <parameter key="Content-Type">application/json</parameter>
+            </parameter>
+            <parameter key="base_uri">https://cityads.com/api/rest/webmaster/v2/</parameter>
+        </parameter>
+    </parameters>
+
+    <services>
+        <service id="http_client.auth" class="\GuzzleHttp\Client">
+            <argument>%http_client.config.auth%</argument>
+        </service>
+
+        <service id="http_client.api" class="\GuzzleHttp\Client">
+            <argument>%http_client.config.api%</argument>
+        </service>
+
+        <service id="cache_driver.filesystem" class="\Stash\Driver\FileSystem"/>
+        <service id="cache_pool" class="\Stash\Pool">
+            <argument type="service" id="cache_driver.filesystem"/>
+        </service>
+
+        <service id="token_generator" class="\CityAds\Api\TokenGenerator">
+            <argument type="service" id="http_client.auth"/>
+            <argument type="service" id="cache_pool"/>
+        </service>
+
+        <service id="api_client" class="\CityAds\Api\Client">
+            <argument type="service" id="http_client.api"/>
+            <argument type="service" id="token_generator"/>
+        </service>
+    </services>
+</container>
