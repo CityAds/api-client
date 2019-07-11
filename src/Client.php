@@ -70,12 +70,12 @@ class Client
 			throw new \BadMethodCallException("Incorrect resource name");
 		}
 
-		$params['access_token'] = $this->tokenGenerator->getToken($this->clientCredentials)->getAccessToken();
+		$options = $this->buildOptions($method, $params);
 
 		$response = $this->httpClient->request(
 			$method,
 			ltrim($resource, "/"),
-			$this->buildOptions($method, $params)
+			$options
 		);
 
 		return Response::create($response);
@@ -89,10 +89,16 @@ class Client
 	 */
 	private function buildOptions($method, array $params)
 	{
-		if (strtoupper($method) === 'GET') {
-			return ['query' => $params,];
-		}
+		$options = [
+			'headers' => [
+				'X-Access-Token' => $this->tokenGenerator->getToken($this->clientCredentials)->getAccessToken()
+			]
+		];
 
-		return ['form_params' => $params,];
+		$parametersKeyName = strtoupper($method) === 'GET' ? 'query' : 'form_params';
+
+		$options[$parametersKeyName] = $params;
+
+		return $options;
 	}
 }
